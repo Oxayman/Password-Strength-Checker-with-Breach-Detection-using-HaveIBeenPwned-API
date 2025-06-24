@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberPass - Password Strength Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyber-green: #00ff41;
+            --cyber-dark: #0d0208;
+            --cyber-darker: #003b00;
+            --cyber-gray: #008f11;
+            --cyber-red: #ff073a;
+            --cyber-yellow: #ffe81f;
+            --cyber-blue: #00b4d8;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--cyber-dark);
+            color: var(--cyber-green);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .cyber-scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 255, 65, 0.1),
+                rgba(0, 255, 65, 0.3) 50%,
+                rgba(0, 255, 65, 0.1)
+            );
+            z-index: 10;
+            animation: scanline 4s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanline {
+            0% { top: -10px; }
+            100% { top: 100%; }
+        }
+
+        .cyber-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .cyber-card {
+            background-color: rgba(13, 2, 8, 0.8);
+            border: 1px solid var(--cyber-green);
+            padding: 2rem;
+            border-radius: 0;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyber-green), transparent);
+            animation: borderGlow 2s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .cyber-title {
+            color: var(--cyber-green);
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-shadow: 0 0 5px var(--cyber-green);
+            letter-spacing: 3px;
+        }
+
+        .cyber-subtitle {
+            color: var(--cyber-gray);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .cyber-input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--cyber-gray);
+            color: var(--cyber-green);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--cyber-green);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            background-color: rgba(0, 59, 0, 0.3);
+        }
+
+        .cyber-eye {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            user-select: none;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .cyber-eye:hover {
+            opacity: 1;
+            color: var(--cyber-blue);
+        }
+
+        .cyber-strength-meter {
+            margin: 1.5rem 0;
+        }
+
+        .cyber-strength-bar {
+            height: 8px;
+            background: var(--cyber-darker);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-strength-bar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            background: var(--cyber-green);
+            transition: width 0.5s ease;
+        }
+
+        .cyber-strength-message {
+            font-weight: normal;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .cyber-breach-warning {
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            padding: 10px;
+            border: 1px solid;
+            display: none;
+        }
+
+        .cyber-requirements {
+            list-style-type: none;
+            margin-top: 1.5rem;
+            padding: 0;
+        }
+
+        .cyber-requirements li {
+            margin-bottom: 0.8rem;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            color: var(--cyber-gray);
+            transition: color 0.3s ease;
+        }
+
+        .cyber-requirements li .cyber-icon {
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+
+        .cyber-requirements li.valid {
+            color: var(--cyber-green);
+        }
+
+        /* Strength colors */
+        .weak {
+            color: var(--cyber-red);
+        }
+
+        .medium {
+            color: var(--cyber-yellow);
+        }
+
+        .strong {
+            color: var(--cyber-green);
+            text-shadow: 0 0 5px var(--cyber-green);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .cyber-card {
+                padding: 1.5rem;
+            }
+            
+            .cyber-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cyber-container">
+        <div class="cyber-card">
+            <h2 class="cyber-title">CYBERPASS</h2>
+            <p class="cyber-subtitle">PASSWORD STRENGTH ANALYZER</p>
+            
+            <div class="cyber-input-group">
+                <input type="password" id="password" placeholder="ENTER YOUR PASSWORD" onkeyup="checkPassword()">
+                <span class="cyber-eye" onclick="togglePassword()">👁</span>
+            </div>
+            
+            <div class="cyber-strength-meter">
+                <div class="cyber-strength-bar" id="strength-bar"></div>
+                <div id="strength-message" class="cyber-strength-message">WEAK SECURITY</div>
+            </div>
+            
+            <div id="breach-warning" class="cyber-breach-warning"></div>
+            
+            <ul class="cyber-requirements">
+                <li id="length"><span class="cyber-icon">⌨</span> AT LEAST 8 CHARACTERS</li>
+                <li id="uppercase"><span class="cyber-icon">⇧</span> CONTAINS UPPERCASE</li>
+                <li id="lowercase"><span class="cyber-icon">⇩</span> CONTAINS LOWERCASE</li>
+                <li id="number"><span class="cyber-icon">#</span> CONTAINS NUMBER</li>
+                <li id="special"><span class="cyber-icon">!</span> CONTAINS SPECIAL CHARACTER</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="cyber-grid"></div>
+    <div class="cyber-scanline"></div>
+    
+    <script>
+        async function checkPassword() {
+            const password = document.getElementById("password").value;
+            const strengthBar = document.getElementById("strength-bar");
+            const strengthMessage = document.getElementById("strength-message");
+            const breachWarning = document.getElementById("breach-warning");
+            
+            // Update requirements in real-time
+            updateRequirement("length", password.length >= 8);
+            updateRequirement("uppercase", /[A-Z]/.test(password));
+            updateRequirement("lowercase", /[a-z]/.test(password));
+            updateRequirement("number", /[0-9]/.test(password));
+            updateRequirement("special", /[^A-Za-z0-9]/.test(password));
+            
+            // Strength Calculation
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            // Update strength bar and message
+            let strengthClass = "";
+            let strengthWidth = "0%";
+            let strengthText = "";
+            
+            switch (strength) {
+                case 0:
+                case 1:
+                    strengthClass = "weak";
+                    strengthWidth = "30%";
+                    strengthText = "WEAK SECURITY";
+                    break;
+                case 2:
+                    strengthClass = "medium";
+                    strengthWidth = "60%";
+                    strengthText = "MODERATE SECURITY";
+                    break;
+                case 3:
+                case 4:
+                    strengthClass = "strong";
+                    strengthWidth = "100%";
+                    strengthText = "STRONG SECURITY";
+                    break;
+            }
+            
+            strengthBar.style.width = strengthWidth;
+            strengthBar.className = "cyber-strength-bar " + strengthClass;
+            strengthMessage.className = "cyber-strength-message " + strengthClass;
+            strengthMessage.innerText = strengthText;
+            
+            // Check if password has been pwned using HIBP
+            if (password.length > 0) {
+                const sha1 = await sha1Hash(password);
+                const prefix = sha1.substring(0, 5);
+                const suffix = sha1.substring(5).toUpperCase();
+                
+                try {
+                    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+                    const text = await response.text();
+                    const lines = text.split('\n');
+                    let found = false;
+                    
+                    for (const line of lines) {
+                        const [hashSuffix, count] = line.trim().split(':');
+                        if (hashSuffix === suffix) {
+                            breachWarning.innerText = `⚠️ WARNING: THIS PASSWORD APPEARS IN ${count} DATA BREACHES!`;
+                            breachWarning.style.display = "block";
+                            breachWarning.style.borderColor = "var(--cyber-red)";
+                            breachWarning.style.color = "var(--cyber-red)";
+                            found = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!found) {
+                        breachWarning.innerText = "✅ NO KNOWN BREACHES DETECTED";
+                        breachWarning.style.display = "block";
+                        breachWarning.style.borderColor = "var(--cyber-green)";
+                        breachWarning.style.color = "var(--cyber-green)";
+                    }
+                } catch (error) {
+                    breachWarning.innerText = "⚠️ UNABLE TO VERIFY BREACH STATUS";
+                    breachWarning.style.display = "block";
+                    breachWarning.style.borderColor = "var(--cyber-yellow)";
+                    breachWarning.style.color = "var(--cyber-yellow)";
+                }
+            } else {
+                breachWarning.style.display = "none";
+            }
+        }
+
+        function updateRequirement(id, isValid) {
+            const element = document.getElementById(id);
+            if (isValid) {
+                element.classList.add("valid");
+            } else {
+                element.classList.remove("valid");
+            }
+        }
+
+        function togglePassword() {
+            const passwordField = document.getElementById("password");
+            const eyeIcon = document.querySelector(".cyber-eye");
+            
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                eyeIcon.textContent = "👁";
+            } else {
+                passwordField.type = "password";
+                eyeIcon.textContent = "👁";
+            }
+        }
+
+        // SHA-1 Hash Function
+        async function sha1Hash(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+        }
+    </script>
+</body>
+</html>
